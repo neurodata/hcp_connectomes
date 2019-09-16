@@ -3,10 +3,10 @@ from dmriprep.utils.bids import get_bids_layout
 from dmriprep.workflows.dwi.base import init_dwi_preproc_wf
 from dmriprep.workflows.dwi.util import init_dwi_concat_wf
 
-bdir = "/Users/j1c/git/hcp_connectomes/data"
+bdir = "/mnt/ssd3/j1c/hcp1200"
 sub = "100206"
 ses = 1
-out_dir = "/Users/j1c/git/hcp_connectomes/derivatives"
+out_dir = "/mnt/ssd3/j1c/hcp1200_processed"
 sub_dict = get_bids_layout(bdir, sub, ses)
 if len(sub_dict[ses].keys()) == 1:
     dwi_file = sub_dict[ses][1]["dwi_file"]
