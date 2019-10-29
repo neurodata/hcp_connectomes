@@ -65,6 +65,10 @@ def register_t1w_2_mni(
     if not output_path.is_dir():
         output_path.mkdir(parents=True)
 
+    mask_path = output_path / "masks"
+    if not mask_path.is_dir():
+        mask_path.mkdir(parents=True)
+
     FSLDIR = os.environ["FSLDIR"]
 
     # files names
@@ -97,8 +101,6 @@ def register_t1w_2_mni(
     t12mni_xfm_init = output_path / f"sub-{subject}_ses-{ses}_t12mni_xfm_init.mat"
     t12mni_xfm = output_path / f"sub-{subject}_ses-{ses}_t12mni_xfm.mat"
     warp_t1w2mni = output_path / f"sub-{subject}_ses-{ses}_warp-t1w2mni.mat"
-
-    # if not t1w_brain.exists():
 
     # Normalize
     print("\nRunning Normalization")
@@ -158,7 +160,7 @@ def register_t1w_2_mni(
 
     # Segment wm, gm, csf
     print("\nSegmenting brain regions")
-    maps = mgru.segment_t1w(t1w_brain_aligned, output_path / "masks" / f"sub-{subject}")
+    maps = mgru.segment_t1w(t1w_brain, mask_path / f"sub-{subject}")
 
     wm_mask = maps["wm_prob"]
     gm_mask = maps["gm_prob"]
@@ -166,6 +168,23 @@ def register_t1w_2_mni(
     match_target_vox_res(wm_mask)
     match_target_vox_res(gm_mask)
     match_target_vox_res(csf_mask)
+
+    # Apply xfm to masks
+    wm_mask_aligned = mask_path / f"sub-{subject}_wm_mask.nii.gz"
+    gm_mask_aligned = mask_path / f"sub-{subject}_gm_mask.nii.gz"
+    csf_mask_aligned = mask_path / f"sub-{subject}_csf_mask.nii.gz"
+
+    print("\nApplying T1w-->MNI warp to masks")
+    mgru.applyxfm(t1w_brain_aligned, wm_mask, t12mni_xfm, wm_mask_aligned)
+    mgru.applyxfm(t1w_brain_aligned, gm_mask, t12mni_xfm, gm_mask_aligned)
+    mgru.applyxfm(t1w_brain_aligned, csf_mask, t12mni_xfm, csf_mask_aligned)
+
+    # remove unnecessary files
+    [
+        os.remove(str(x))
+        for x in list(mask_path.glob("*.nii.gz"))
+        if not "mask" in str(x.name)
+    ]
 
 
 from argparse import ArgumentParser
