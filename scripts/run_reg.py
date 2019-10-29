@@ -112,7 +112,7 @@ def register_t1w_2_mni(
     warp_t1w2mni = output_path / f"sub-{subject}_ses-{ses}_warp-t1w2mni.mat"
 
     # Normalize
-    print("\nRunning Normalization")
+    """print("\nRunning Normalization")
     mgru.normalize_t1w(input_t1w, t1w_normalized)
 
     # Skull stripping
@@ -165,7 +165,7 @@ def register_t1w_2_mni(
             interp="spline",
             out=t1w_brain_aligned,
             sch=None,
-        )
+        )"""
 
     # Segment wm, gm, csf
     print("\nSegmenting brain regions")
@@ -174,19 +174,23 @@ def register_t1w_2_mni(
     wm_mask = maps["wm_prob"]
     gm_mask = maps["gm_prob"]
     csf_mask = maps["csf_prob"]
+    tissue_mask = str(mask_path / f"sub-{subject}_pveseg.nii.gz")
     match_target_vox_res(wm_mask)
     match_target_vox_res(gm_mask)
     match_target_vox_res(csf_mask)
+    match_target_vox_res(tissue_mask)
 
     # Apply xfm to masks
     wm_mask_aligned = mask_path / f"sub-{subject}_wm_mask.nii.gz"
     gm_mask_aligned = mask_path / f"sub-{subject}_gm_mask.nii.gz"
     csf_mask_aligned = mask_path / f"sub-{subject}_csf_mask.nii.gz"
+    tissue_mask_aligned = mask_path / f"sub-{subject}_tissue_mask.nii.gz"
 
     print("\nApplying T1w-->MNI warp to masks")
     mgru.applyxfm(t1w_brain_aligned, wm_mask, t12mni_xfm, wm_mask_aligned)
     mgru.applyxfm(t1w_brain_aligned, gm_mask, t12mni_xfm, gm_mask_aligned)
     mgru.applyxfm(t1w_brain_aligned, csf_mask, t12mni_xfm, csf_mask_aligned)
+    mgru.applyxfm(t1w_brain_aligned, tissue_mask, t12mni_xfm, tissue_mask_aligned)
 
     # remove unnecessary files
     [
