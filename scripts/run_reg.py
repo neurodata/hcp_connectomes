@@ -112,7 +112,7 @@ def register_t1w_2_mni(
     warp_t1w2mni = output_path / f"sub-{subject}_ses-{ses}_warp-t1w2mni.mat"
 
     # Normalize
-    """print("\nRunning Normalization")
+    print("\nRunning Normalization")
     mgru.normalize_t1w(input_t1w, t1w_normalized)
 
     # Skull stripping
@@ -165,7 +165,7 @@ def register_t1w_2_mni(
             interp="spline",
             out=t1w_brain_aligned,
             sch=None,
-        )"""
+        )
 
     # Segment wm, gm, csf
     print("\nSegmenting brain regions")
