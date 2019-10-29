@@ -1,0 +1,3 @@
+[submodule "neuroparc"]
+	path = neuroparc
+	url = https://github.com/neurodata/neuroparc
