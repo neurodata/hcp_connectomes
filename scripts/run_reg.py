@@ -4,6 +4,12 @@ from pathlib import Path
 import nibabel as nib
 from ndmg.utils import reg_utils as mgru
 
+import warnings
+
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    import sklearn
+
 
 def match_target_vox_res(img_file, vox_size="1mm", sens="t1w"):
     """Reslices input MRI file if it does not match the targeted voxel resolution. Can take dwi or t1w scans.
@@ -61,6 +67,9 @@ def register_t1w_2_mni(
     # deal with paths
     input_path = Path(input_path)
     output_path = Path(output_path) / f"sub-{subject}"
+
+    if not (input_path / f"sub-{subject}").is_dir():
+        return
 
     if not output_path.is_dir():
         output_path.mkdir(parents=True)
