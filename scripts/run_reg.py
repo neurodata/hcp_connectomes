@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from argparse import ArgumentParser
 
 import nibabel as nib
 from ndmg.utils import reg_utils as mgru
@@ -54,7 +55,13 @@ def match_target_vox_res(img_file, vox_size="1mm", sens="t1w"):
 
 
 def register_t1w_2_mni(
-    input_path, output_path, subject, ses=1, nonlinear=False, vox_size="1mm"
+    input_path,
+    output_path,
+    subject,
+    ses=1,
+    nonlinear=False,
+    vox_size="1mm",
+    normalize=True,
 ):
     """
     Parameters
@@ -111,9 +118,12 @@ def register_t1w_2_mni(
     t12mni_xfm = output_path / f"sub-{subject}_ses-{ses}_t12mni_xfm.mat"
     warp_t1w2mni = output_path / f"sub-{subject}_ses-{ses}_warp-t1w2mni.mat"
 
-    # Normalize
-    print("\nRunning Normalization")
-    mgru.normalize_t1w(input_t1w, t1w_normalized)
+    if normalize:
+        # Normalize
+        print("\nRunning Normalization")
+        mgru.normalize_t1w(input_t1w, t1w_normalized)
+    else:
+        t1w_normalized = input_t1w
 
     # Skull stripping
     print("\nRunning 3dSkullStrip")
@@ -200,9 +210,6 @@ def register_t1w_2_mni(
     ]
 
 
-from argparse import ArgumentParser
-
-
 def main():
     """Starting point of the pipeline, assuming that you are using a BIDS organized dataset
     """
@@ -250,6 +257,9 @@ def main():
     parser.add_argument(
         "--nonlinear", default=False, help="Whether to use nonlinear registration"
     )
+    parser.add_argument(
+        "--normalize", default=True, help="Whether to use T1w normalization"
+    )
 
     result = parser.parse_args()
 
@@ -259,8 +269,9 @@ def main():
     sesh = result.session_label
     nonlinear = result.nonlinear
     vox = result.vox
+    normalize = result.normalize
 
-    register_t1w_2_mni(inDir, outDir, subj, sesh, nonlinear, vox)
+    register_t1w_2_mni(inDir, outDir, subj, sesh, nonlinear, vox, normalize)
 
 
 if __name__ == "__main__":
