@@ -93,6 +93,6 @@ if __name__ == "__main__":
     result = parser.parse_args()
     inDir = result.input_dir
     outDir = result.output_dir
-    parcDir = result.participant_label
+    parcDir = result.parcellation_dir
 
     main(inDir, outDir, parcDir)
