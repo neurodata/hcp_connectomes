@@ -1,2 +1,5 @@
-pybids
--e git://github.com/dpys/dmriprep.git@nipreps#egg=dmriprep
+dipy>=1.1.1
+nipype>=1.4.0
+nibabel
+numpy
+scipy
