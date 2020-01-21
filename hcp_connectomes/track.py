@@ -13,6 +13,20 @@ from dipy.tracking.stopping_criterion import BinaryStoppingCriterion
 from dipy.tracking.streamline import Streamlines
 
 
+def load_data(fdwi, fbval, fbvec, fwmparc):
+    dwi = nib.load(fdwi).get_fdata()
+
+    bvals, bvecs = read_bvals_bvecs(fbval, fbvec)
+    gtab = gradient_table(bvals, bvecs)
+
+    wmparc = nib.load(fwmparc).get_fdata()
+    # These are WM values from freesurfer
+    values = list(range(251, 256)) + list(range(3000, 5003))
+    wm_mask = np.isin(wmparc, values)
+
+    return dwi, gtab, wm_mask
+
+
 def build_seed_list(wm_mask, dens):
     """uses dipy tractography utilities in order to create a seed list for tractography
     Parameters
@@ -58,20 +72,6 @@ def csd_mod_est(dwi, gtab, wm_mask):
     return mod
 
 
-def load_data(fdwi, fbval, fbvec, fwmparc):
-    dwi = nib.load(fdwi).get_fdata()
-
-    bvals, bvecs = read_bvals_bvecs(fbval, fbvec)
-    gtab = gradient_table(bvals, bvecs)
-
-    wmparc = nib.load(fwmparc).get_fdata()
-    # These are WM values from freesurfer
-    values = list(range(251, 256)) + list(range(3000, 5003))
-    wm_mask = np.isin(wmparc, values)
-
-    return dwi, gtab, wm_mask
-
-
 def run_tractography(fdwi, fbval, fbvec, fwmparc, mod_func, mod_type, seed_density=20):
     """
     mod_func : 'str'
@@ -86,6 +86,7 @@ def run_tractography(fdwi, fbval, fbvec, fwmparc, mod_func, mod_type, seed_densi
     stream_affine = np.eye(4)
 
     # Loading data
+    print("Loading Data...")
     dwi, gtab, wm_mask = load_data(fdwi, fbval, fbvec, fwmparc)
 
     # Make tissue classifier
@@ -107,7 +108,7 @@ def run_tractography(fdwi, fbval, fbvec, fwmparc, mod_func, mod_type, seed_densi
     # Make streamlines
     if mod_type == "det":
         print("Obtaining peaks from model...")
-        mod_peaks = peaks_from_model(
+        direction_getter = peaks_from_model(
             mod,
             dwi,
             sphere,
@@ -116,14 +117,6 @@ def run_tractography(fdwi, fbval, fbvec, fwmparc, mod_func, mod_type, seed_densi
             mask=wm_mask,
             npeaks=5,
             normalize_peaks=True,
-        )
-        streamline_generator = LocalTracking(
-            mod_peaks,
-            tiss_classifier,
-            seeds,
-            stream_affine,
-            step_size=0.5,
-            return_all=True,
         )
     elif mod_type == "prob":
         print("Preparing probabilistic tracking...")
@@ -134,19 +127,26 @@ def run_tractography(fdwi, fbval, fbvec, fwmparc, mod_func, mod_type, seed_densi
             print(
                 "Proceeding using spherical harmonic coefficient from model estimation..."
             )
-            pdg = ProbabilisticDirectionGetter.from_shcoeff(
+            direction_getter = ProbabilisticDirectionGetter.from_shcoeff(
                 mod_fit.shm_coeff, max_angle=60.0, sphere=sphere
             )
         except:
             print("Proceeding using FOD PMF from model estimation...")
             fod = mod_fit.odf(sphere)
             pmf = fod.clip(min=0)
-            pdg = ProbabilisticDirectionGetter.from_pmf(
+            direction_getter = ProbabilisticDirectionGetter.from_pmf(
                 pmf, max_angle=60.0, sphere=sphere
             )
-        streamline_generator = LocalTracking(
-            pdg, tiss_classifier, seeds, stream_affine, step_size=0.5, return_all=True
-        )
+
+    print("Running Local Tracking")
+    streamline_generator = LocalTracking(
+        direction_getter,
+        tiss_classifier,
+        seeds,
+        stream_affine,
+        step_size=0.5,
+        return_all=True,
+    )
 
     print("Reconstructing tractogram streamlines...")
     streamlines = Streamlines(streamline_generator)
