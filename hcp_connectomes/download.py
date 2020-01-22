@@ -35,6 +35,11 @@ def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=Fa
     p = Path(output_path)
 
     def worker(sub_prefix):
+        s3 = boto3.client(
+            "s3",
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+        )
         sub_id = sub_prefix.split("/")[1]
 
         if verbose:
@@ -66,14 +71,11 @@ def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=Fa
             if verbose:
                 print(f"Downloading File: {filename}...")
 
-            s3.download_file(Bucket=bucket, Key=key, Filename=filename)
+            s3.download_file(Bucket=bucket, Key=key, Filename=str(filename))
 
     if n_jobs == 1:
         for sub_prefix in subject_list:
             worker(sub_prefix)
-
     else:
-        Parallel(n_jobs=n_jobs)(
-            delayed(worker)(sub_prefix) for sub_prefix in subject_list
-        )
+        Parallel(n_jobs=n_jobs, verbose=1)(delayed(worker)(s) for s in subject_list)
 
