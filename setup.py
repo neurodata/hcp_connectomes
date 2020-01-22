@@ -6,6 +6,7 @@ REQUIRED_PACKAGES = [
     "nipype>=1.4.0",
     "scipy>=1.4.0",
     "nibabel",
+    "boto3",
 ]
 
 setup(
