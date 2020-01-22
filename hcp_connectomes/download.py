@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import boto3
-fromb joblib import Parallel, delayed
+from joblib import Parallel, delayed
+
 
 def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=False):
     """
@@ -72,4 +73,7 @@ def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=Fa
             worker(sub_prefix)
 
     else:
-        Parallel(n_jobs=n_jobs)(delayed(worker)(sub_prefix) for sub_prefix in subject_list)
+        Parallel(n_jobs=n_jobs)(
+            delayed(worker)(sub_prefix) for sub_prefix in subject_list
+        )
+
