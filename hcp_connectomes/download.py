@@ -76,7 +76,7 @@ def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=Fa
         for key in to_download:
             filename = p / key.replace(prefix, "")
             if not filename.parents[0].exists():
-                filename.parents[0].mkdir()
+                filename.parents[0].mkdir(parents=True)
 
             if verbose:
                 print(f"Downloading File: {filename}...")
