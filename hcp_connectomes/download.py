@@ -4,7 +4,14 @@ import boto3
 from joblib import Parallel, delayed
 
 
-def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=False):
+def get_data(
+    access_key_id,
+    secret_access_key,
+    output_path,
+    prefix="HCP_1200/",
+    n_jobs=1,
+    verbose=False,
+):
     """
     Do not hard code access key and secret key.
 
@@ -17,10 +24,12 @@ def get_data(access_key_id, secret_access_key, output_path, n_jobs=1, verbose=Fa
     output_path : str
         Path to the output files
 
+    prefix : str
+        One of {"HCP_1200/", "HCP_Retest/"}
+
     verbose : bool, default=False
     """
     bucket = "hcp-openaccess"
-    prefix = "HCP_1200/"
 
     def get_subjects():
         s3 = boto3.client(
